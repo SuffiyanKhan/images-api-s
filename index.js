@@ -35,10 +35,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
             upload_preset: 'my_preset' 
         });
         fs.unlinkSync(req.file.path);
-        res.status(200).json({ imageUrl: result.secure_url,publicId: result.public_id });
+       return res.status(200).json({ imageUrl: result.secure_url,publicId: result.public_id });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error uploading image', error: error.message });
+        return  res.status(500).json({ message: 'Error uploading image', error: error.message });
     }
 });
 
@@ -72,10 +71,9 @@ app.post('/upload', upload.array('images', 10), async (req, res) => {
         });
 
         // Respond with array of Cloudinary image URLs and public_ids
-        res.status(200).json({ imagesData });
+        return  res.status(200).json({ imagesData });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error uploading images', error: error.message });
+        return res.status(500).json({ message: 'Error uploading images', error: error.message });
     }
 });
 // Route to handle single image delete
@@ -85,10 +83,9 @@ app.delete('/delete-image/:public_id', async (req, res) => {
         // Delete image using Cloudinary's destroy method
         const deleteResponse = await cloudinary.uploader.destroy(public_id);
         // Respond with success message
-        res.status(200).json({ message: 'Image deleted successfully', deleteResponse });
+        return  res.status(200).json({ message: 'Image deleted successfully', deleteResponse });
     } catch (error) {
-        console.error('Error deleting image:', error);
-        res.status(500).json({ message: 'Error deleting image', error: error.message });
+        return  res.status(500).json({ message: 'Error deleting image', error: error.message });
     }
 });
 // Route to handle all images delete
@@ -108,12 +105,16 @@ app.delete('/delete-all-images', async (req, res) => {
         const deleteResponse = await cloudinary.api.delete_resources(publicIds);
 
         // Respond with success message
-        res.status(200).json({ message: 'All images deleted successfully', deleteResponse });
+        return   res.status(200).json({ message: 'All images deleted successfully', deleteResponse });
     } catch (error) {
-        console.error('Error deleting images:', error);
-        res.status(500).json({ message: 'Error deleting images', error: error.message });
+        return  res.status(500).json({ message: 'Error deleting images', error: error.message });
     }
 });
+
+app.get('/',(req,res)=>{
+    return res.status(200).json("hi")
+})
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
