@@ -183,9 +183,9 @@ const PORT = process.env.PORT || 8000;
 
 // Cloudinary configuration
 cloudinary.config({
-  cloud_name: 'dandp2osc', // Replace with your Cloudinary cloud name
-  api_key: '734246468235897', // Replace with your Cloudinary API key
-  api_secret: 'xC6A21_VzEcGj0LtMvT3D5WfuyA' // Replace with your Cloudinary API secret
+    cloud_name: 'dandp2osc',
+    api_key: 734246468235897,
+    api_secret: 'xC6A21_VzEcGj0LtMvT3D5WfuyA'
 });
 
 // Multer configuration (memory storage)
@@ -194,94 +194,94 @@ const upload = multer({ storage: storage });
 
 // Helper function to upload a file to Cloudinary using streamifier
 const uploadToCloudinary = (buffer) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream({
-      upload_preset: 'my_preset' // Replace with your Cloudinary upload preset name
-    }, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream({
+            upload_preset: 'my_preset' // Replace with your Cloudinary upload preset name
+        }, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+        streamifier.createReadStream(buffer).pipe(uploadStream);
     });
-    streamifier.createReadStream(buffer).pipe(uploadStream);
-  });
 };
 
 // Route to handle single image upload
 app.post('/upload', upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const result = await uploadToCloudinary(req.file.buffer);
+
+        res.status(200).json({
+            imageUrl: result.secure_url,
+            publicId: result.public_id
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error uploading image', error: error.message });
     }
-
-    const result = await uploadToCloudinary(req.file.buffer);
-
-    res.status(200).json({
-      imageUrl: result.secure_url,
-      publicId: result.public_id
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error uploading image', error: error.message });
-  }
 });
 
 // Route to handle multiple image uploads
 app.post('/uploads', upload.array('images', 10), async (req, res) => {
-  try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: 'No files uploaded' });
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: 'No files uploaded' });
+        }
+
+        const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+        const results = await Promise.all(uploadPromises);
+
+        const imagesData = results.map(result => ({
+            imageUrl: result.secure_url,
+            publicId: result.public_id
+        }));
+
+        res.status(200).json({ imagesData });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error uploading images', error: error.message });
     }
-
-    const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
-    const results = await Promise.all(uploadPromises);
-
-    const imagesData = results.map(result => ({
-      imageUrl: result.secure_url,
-      publicId: result.public_id
-    }));
-
-    res.status(200).json({ imagesData });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error uploading images', error: error.message });
-  }
 });
 
 // Route to handle single image delete
 app.delete('/delete-image/:public_id', async (req, res) => {
-  try {
-    const { public_id } = req.params;
-    const deleteResponse = await cloudinary.uploader.destroy(public_id);
+    try {
+        const { public_id } = req.params;
+        const deleteResponse = await cloudinary.uploader.destroy(public_id);
 
-    res.status(200).json({ message: 'Image deleted successfully', deleteResponse });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error deleting image', error: error.message });
-  }
+        res.status(200).json({ message: 'Image deleted successfully', deleteResponse });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting image', error: error.message });
+    }
 });
 
 // Route to handle all images delete
 app.delete('/delete-all-images', async (req, res) => {
-  try {
-    const { resources } = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: '',
-      max_results: 100
-    });
+    try {
+        const { resources } = await cloudinary.api.resources({
+            type: 'upload',
+            prefix: '',
+            max_results: 100
+        });
 
-    const publicIds = resources.map(resource => resource.public_id);
-    const deleteResponse = await cloudinary.api.delete_resources(publicIds);
+        const publicIds = resources.map(resource => resource.public_id);
+        const deleteResponse = await cloudinary.api.delete_resources(publicIds);
 
-    res.status(200).json({ message: 'All images deleted successfully', deleteResponse });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error deleting images', error: error.message });
-  }
+        res.status(200).json({ message: 'All images deleted successfully', deleteResponse });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error deleting images', error: error.message });
+    }
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json("hi");
+    res.status(200).json("hi");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
