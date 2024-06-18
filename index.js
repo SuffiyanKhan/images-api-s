@@ -129,11 +129,11 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Cloudinary configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // Set these variables in Vercel environment
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+ cloudinary.config({
+         cloud_name: 'dandp2osc', 
+         api_key: 734246468235897,       
+         api_secret: 'xC6A21_VzEcGj0LtMvT3D5WfuyA'  
+     });
 
 // Multer configuration (memory storage)
 const storage = multer.memoryStorage();
