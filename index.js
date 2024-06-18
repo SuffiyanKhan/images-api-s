@@ -129,45 +129,45 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Cloudinary configuration
- cloudinary.config({
-         cloud_name: 'dandp2osc', 
-         api_key: 734246468235897,       
-         api_secret: 'xC6A21_VzEcGj0LtMvT3D5WfuyA'  
-     });
+cloudinary.config({
+    cloud_name: 'dandp2osc',
+    api_key: 734246468235897,
+    api_secret: 'xC6A21_VzEcGj0LtMvT3D5WfuyA'
+});
 
 // Multer configuration (memory storage)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        // Convert the buffer to a readable stream and upload to Cloudinary
+        const result = await new Promise((resolve, reject) => {
+            const upload_stream = cloudinary.uploader.upload_stream({
+                upload_preset: 'my_preset' // Replace with your Cloudinary upload preset name
+            }, (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            });
+
+            streamifier.createReadStream(req.file.buffer).pipe(upload_stream);
+        });
+
+        res.status(200).json({
+            imageUrl: result.secure_url,
+            publicId: result.public_id
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error uploading image', error: error.message });
     }
-
-    // Convert the buffer to a readable stream and upload to Cloudinary
-    const result = await new Promise((resolve, reject) => {
-      const upload_stream = cloudinary.uploader.upload_stream({
-        upload_preset: 'my_preset' // Replace with your Cloudinary upload preset name
-      }, (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      });
-
-      streamifier.createReadStream(req.file.buffer).pipe(upload_stream);
-    });
-
-    res.status(200).json({ 
-      imageUrl: result.secure_url,
-      publicId: result.public_id
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error uploading image', error: error.message });
-  }
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
